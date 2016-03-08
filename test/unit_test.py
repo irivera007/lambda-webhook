@@ -3,6 +3,7 @@ import lambdawebhook.hook
 import os
 import json
 import httpretty
+from requests import HTTPError
 
 
 def load_test_event():
@@ -11,7 +12,6 @@ def load_test_event():
         githubevent = json.load(eventfile)
         githubevent['payload'] = json.dumps(githubevent['payload'])
     return githubevent
-
 
 githubevent = load_test_event()
 
@@ -31,11 +31,11 @@ class VerifySignatureTestCase(unittest.TestCase):
 class LambdaHandlerTestCase(unittest.TestCase):
     @httpretty.activate
     def runTest(self):
+        invalidevent = load_test_event()
+        invalidevent['secret'] = 'invalidsecret'
+        self.assertRaises(HTTPError, lambdawebhook.hook.lambda_handler, invalidevent, {})
+
         # Check return codes
         httpretty.register_uri(httpretty.POST, 'https://localhost/github-webhook/',
                                status=200)
-        self.assertEqual(lambdawebhook.hook.lambda_handler(githubevent, ''), {'status': {200: 'OK'}})
-
-        httpretty.register_uri(httpretty.POST, 'https://localhost/github-webhook/',
-                               status=403)
-        self.assertEqual(lambdawebhook.hook.lambda_handler(githubevent, ''), {'status': {403: 'Forbidden'}})
+        self.assertIsNone(lambdawebhook.hook.lambda_handler(githubevent, {}))

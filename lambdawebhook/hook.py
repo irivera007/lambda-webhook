@@ -3,7 +3,7 @@ import os
 import sys
 import hashlib
 
-# Add the ./site-packages directory to the path for Lambda to load our libs
+# Add the lib directory to the path for Lambda to load our libs
 sys.path.append(os.path.join(os.path.dirname(__file__), 'lib'))
 import requests  # NOQA
 import hmac  # NOQA
@@ -17,7 +17,6 @@ def verify_signature(secret, signature, payload):
 
 def lambda_handler(event, context):
     print 'Webhook received'
-    print event['secret']
     verified = verify_signature(event['secret'],
                                 event['x_hub_signature'],
                                 event['payload'])
@@ -30,9 +29,9 @@ def lambda_handler(event, context):
                                     'X-Hub-Signature':  event['x_hub_signature']
                                  },
                                  json=event['payload'])
-        return {'status': {response.status_code: response.reason}}
+        response.raise_for_status()
     else:
-        return {'status': {403: 'Forbidden'}}
+        raise requests.HTTPError('400 Client Error: Bad Request')
 
 
 if __name__ == "__main__":
