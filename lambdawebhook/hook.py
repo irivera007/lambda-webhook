@@ -24,11 +24,12 @@ def lambda_handler(event, context):
     if verified:
         response = requests.post(event['jenkins_url'],
                                  headers={
+                                    'Content-Type': 'application/json',
                                     'X-GitHub-Delivery': event['x_github_delivery'],
                                     'X-GitHub-Event': event['x_github_event'],
                                     'X-Hub-Signature':  event['x_hub_signature']
                                  },
-                                 json=event['payload'])
+                                 data=event['payload'])
         response.raise_for_status()
     else:
         raise requests.HTTPError('400 Client Error: Bad Request')
