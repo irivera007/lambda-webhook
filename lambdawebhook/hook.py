@@ -2,11 +2,11 @@
 import os
 import sys
 import hashlib
+import hmac
 
 # Add the lib directory to the path for Lambda to load our libs
 sys.path.append(os.path.join(os.path.dirname(__file__), 'lib'))
 import requests  # NOQA
-import hmac  # NOQA
 
 
 def verify_signature(secret, signature, payload):
