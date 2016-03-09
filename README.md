@@ -20,15 +20,20 @@ An AWS Lambda function to receive GitHub webhooks from API gateway and relay the
   - Security Groups: The Security Group configured previously
 
 1. Install dependencies locally:
-       $ pip install -r requirements.txt -t lambdawebhook/lib/
+
+  `$ pip install -r requirements.txt -t lambdawebhook/lib/`
 
 1. Create a ZIP archive of the `lambdawebhook` directory:
-       $ cd lambdawebhook
-       $ zip -r lambdawebhook.zip *
+
+  `$ cd lambdawebhook`
+  `$ zip -r lambdawebhook.zip *`
 
 1. Upload the zipped code to the Lambda function created previously
+
 1. Create an API in API gateway
+
 1. Create a resource for `/github`
+
 1. Create a POST method for `/github`
   - Integration type: Lambda Function
   - Lambda Region: The region of the Lamba function created previously
@@ -62,7 +67,9 @@ An AWS Lambda function to receive GitHub webhooks from API gateway and relay the
             }
 
 1. Deploy API
+
 1. Configure the webhook and secret for the GitHub repository using the API URL provided in the previous step, and `secret` set above.
+
 1. Test by pushing some code to the repository.
 
 ## Development
