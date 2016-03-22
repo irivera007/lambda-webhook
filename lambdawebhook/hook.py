@@ -15,12 +15,12 @@ def verify_signature(secret, signature, payload):
     return hmac.compare_digest(computed_signature, str(signature))
 
 
-def lambda_handler(event, context):
-    print 'Webhook received'
+def relay_github(event):
     verified = verify_signature(event['secret'],
                                 event['x_hub_signature'],
                                 event['payload'])
     print 'Signature verified: ' + str(verified)
+
     if verified:
         response = requests.post(event['jenkins_url'],
                                  headers={
@@ -35,5 +35,22 @@ def lambda_handler(event, context):
         raise requests.HTTPError('400 Client Error: Bad Request')
 
 
-if __name__ == "__main__":
+def relay_quay(event):
+    response = requests.post(event['jenkins_url'],
+                             headers={
+                                 'Content-Type': 'application/json'
+                             },
+                             json=event['payload'])
+    response.raise_for_status()
+
+
+def lambda_handler(event, context):
+    print 'Webhook received'
+    if event.get('service') == 'quay':
+        relay_quay(event)
+    else:
+        relay_github(event)
+
+
+if __name__ == '__main__':
     pass
