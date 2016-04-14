@@ -17,10 +17,9 @@ def verify_signature(secret, signature, payload):
 
 
 def relay_github(event):
-    payload = base64.b64decode(event['payload'])
     verified = verify_signature(event['secret'],
                                 event['x_hub_signature'],
-                                payload)
+                                event['payload'])
     print 'Signature verified: ' + str(verified)
 
     if verified:
@@ -31,7 +30,7 @@ def relay_github(event):
                                     'X-GitHub-Event': event['x_github_event'],
                                     'X-Hub-Signature':  event['x_hub_signature']
                                  },
-                                 data=payload)
+                                 data=event['payload'])
         response.raise_for_status()
     else:
         raise requests.HTTPError('400 Client Error: Bad Request')
@@ -48,6 +47,7 @@ def relay_quay(event):
 
 def lambda_handler(event, context):
     print 'Webhook received'
+    event['payload'] = base64.b64decode(event['payload'])
     if event.get('service') == 'quay':
         relay_quay(event)
     else:
