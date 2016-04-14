@@ -49,7 +49,7 @@ An AWS Lambda function to receive GitHub webhooks from API gateway and relay the
               "x_hub_signature": "$util.escapeJavaScript($input.params().header.get('X-Hub-Signature'))",
               "secret": "some_secret",
               "jenkins_url": "https://jenkins/github-webhook/",
-              "payload": "$util.escapeJavaScript($input.json('$'))"
+              "payload": "$util.base64Encode($input.body)"
           }
 
 1. Method Response:
@@ -78,5 +78,3 @@ Linting (flake8) and testing (unittest) are executed using `tox` in the root dir
 
     $ pip install tox
     $ tox
-
-

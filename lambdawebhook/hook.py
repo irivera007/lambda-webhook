@@ -3,6 +3,7 @@ import os
 import sys
 import hashlib
 import hmac
+import base64
 
 # Add the lib directory to the path for Lambda to load our libs
 sys.path.append(os.path.join(os.path.dirname(__file__), 'lib'))
@@ -16,9 +17,10 @@ def verify_signature(secret, signature, payload):
 
 
 def relay_github(event):
+    payload = base64.b64decode(event['payload'])
     verified = verify_signature(event['secret'],
                                 event['x_hub_signature'],
-                                event['payload'])
+                                payload)
     print 'Signature verified: ' + str(verified)
 
     if verified:
@@ -29,7 +31,7 @@ def relay_github(event):
                                     'X-GitHub-Event': event['x_github_event'],
                                     'X-Hub-Signature':  event['x_hub_signature']
                                  },
-                                 data=event['payload'])
+                                 data=payload)
         response.raise_for_status()
     else:
         raise requests.HTTPError('400 Client Error: Bad Request')
