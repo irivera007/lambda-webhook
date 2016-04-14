@@ -41,7 +41,7 @@ def relay_quay(event):
                              headers={
                                  'Content-Type': 'application/json'
                              },
-                             json=event['payload'])
+                             data=event['payload'])
     response.raise_for_status()
 
 
