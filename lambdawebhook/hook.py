@@ -4,10 +4,18 @@ import sys
 import hashlib
 import hmac
 import base64
+import time
 
 # Add the lib directory to the path for Lambda to load our libs
 sys.path.append(os.path.join(os.path.dirname(__file__), 'lib'))
-import requests  # NOQA
+from requests import Session, HTTPError  # NOQA
+from requests.packages.urllib3.util.retry import Retry  # NOQA
+from requests.adapters import HTTPAdapter  # NOQA
+
+
+class StaticRetry(Retry):
+    def sleep(self):
+        time.sleep(3)
 
 
 def verify_signature(secret, signature, payload):
@@ -16,42 +24,47 @@ def verify_signature(secret, signature, payload):
     return hmac.compare_digest(computed_signature, str(signature))
 
 
-def relay_github(event):
+def relay_github(event, requests_session):
     verified = verify_signature(event['secret'],
                                 event['x_hub_signature'],
                                 event['payload'])
     print 'Signature verified: ' + str(verified)
 
     if verified:
-        response = requests.post(event['jenkins_url'],
-                                 headers={
-                                    'Content-Type': 'application/json',
-                                    'X-GitHub-Delivery': event['x_github_delivery'],
-                                    'X-GitHub-Event': event['x_github_event'],
-                                    'X-Hub-Signature':  event['x_hub_signature']
-                                 },
-                                 data=event['payload'])
+        response = requests_session.post(event['jenkins_url'],
+                                         headers={
+                                            'Content-Type': 'application/json',
+                                            'X-GitHub-Delivery': event['x_github_delivery'],
+                                            'X-GitHub-Event': event['x_github_event'],
+                                            'X-Hub-Signature':  event['x_hub_signature']
+                                         },
+                                         data=event['payload'])
         response.raise_for_status()
     else:
-        raise requests.HTTPError('400 Client Error: Bad Request')
+        raise HTTPError('400 Client Error: Bad Request')
 
 
-def relay_quay(event):
-    response = requests.post(event['jenkins_url'],
-                             headers={
-                                 'Content-Type': 'application/json'
-                             },
-                             data=event['payload'])
+def relay_quay(event, requests_session):
+    response = requests_session.post(event['jenkins_url'],
+                                     headers={
+                                         'Content-Type': 'application/json'
+                                     },
+                                     data=event['payload'])
     response.raise_for_status()
 
 
 def lambda_handler(event, context):
     print 'Webhook received'
     event['payload'] = base64.b64decode(event['payload'])
+    requests_session = Session()
+    retries = StaticRetry(total=40)
+    requests_session.mount(event['jenkins_url'], HTTPAdapter(max_retries=retries))
+
     if event.get('service') == 'quay':
-        relay_quay(event)
+        relay_quay(event, requests_session)
     else:
-        relay_github(event)
+        relay_github(event, requests_session)
+    print 'Successfully relayed payload'
 
 
 if __name__ == '__main__':
