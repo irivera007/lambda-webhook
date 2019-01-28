@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 import os
 import sys
 import hashlib
@@ -19,16 +20,16 @@ class StaticRetry(Retry):
 
 
 def verify_signature(secret, signature, payload):
-    computed_hash = hmac.new(str(secret), payload, hashlib.sha1)
+    computed_hash = hmac.new(secret.encode('ascii'), payload, hashlib.sha1)
     computed_signature = '='.join(['sha1', computed_hash.hexdigest()])
-    return hmac.compare_digest(computed_signature, str(signature))
+    return hmac.compare_digest(computed_signature.encode('ascii'), signature.encode('ascii'))
 
 
 def relay_github(event, requests_session):
     verified = verify_signature(event['secret'],
                                 event['x_hub_signature'],
                                 event['payload'])
-    print 'Signature verified: ' + str(verified)
+    print('Signature verified: {}'.format(verified))
 
     if verified:
         response = requests_session.post(event['jenkins_url'],
@@ -54,7 +55,7 @@ def relay_quay(event, requests_session):
 
 
 def lambda_handler(event, context):
-    print 'Webhook received'
+    print('Webhook received')
     event['payload'] = base64.b64decode(event['payload'])
     requests_session = Session()
     retries = StaticRetry(total=40)
@@ -64,7 +65,7 @@ def lambda_handler(event, context):
         relay_quay(event, requests_session)
     else:
         relay_github(event, requests_session)
-    print 'Successfully relayed payload'
+    print('Successfully relayed payload')
 
 
 if __name__ == '__main__':
