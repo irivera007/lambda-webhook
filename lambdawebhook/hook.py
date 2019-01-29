@@ -4,6 +4,7 @@ import os
 import sys
 import hashlib
 import hmac
+import json
 import base64
 import time
 
@@ -12,6 +13,8 @@ sys.path.append(os.path.join(os.path.dirname(__file__), 'lib'))
 from requests import Session, HTTPError  # NOQA
 from requests.packages.urllib3.util.retry import Retry  # NOQA
 from requests.adapters import HTTPAdapter  # NOQA
+
+import boto3
 
 
 class StaticRetry(Retry):
@@ -54,6 +57,32 @@ def relay_quay(event, requests_session):
     response.raise_for_status()
 
 
+def relay_sqs(event):
+    sqs_queue = event.get('sqs_queue')
+    sqs_region = event.get('sqs_region')
+    assert sqs_queue
+    assert sqs_region
+
+    sqs_obj = dict(
+        timestamp=int(time.time()),
+        jenkins_url=event.get('jenkins_url'),
+        headers={
+            'Content-Type': 'application/json',
+            'X-GitHub-Delivery': event['x_github_delivery'],
+            'X-GitHub-Event': event['x_github_event'],
+            'X-Hub-Signature': event['x_hub_signature']
+        },
+        data=event['payload'],
+    )
+
+    sqs = boto3.client('sqs', sqs_region)
+    queue_url = sqs.get_queue_url(QueueName=sqs_queue)['QueueUrl']
+    sqs.send_message(
+        QueueUrl=queue_url,
+        MessageBody=json.dumps(sqs_obj).decode(),
+    )
+
+
 def lambda_handler(event, context):
     print('Webhook received')
     event['payload'] = base64.b64decode(event['payload'])
@@ -63,6 +92,8 @@ def lambda_handler(event, context):
 
     if event.get('service') == 'quay':
         relay_quay(event, requests_session)
+    if event.get('service') == 'sqs':
+        relay_sqs(event)
     else:
         relay_github(event, requests_session)
     print('Successfully relayed payload')

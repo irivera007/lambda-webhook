@@ -13,7 +13,6 @@ def load_test_event():
         githubevent = json.load(eventfile)
         print("load_test_event() payload ({}): {}".format(type(githubevent['payload']), githubevent['payload']))
         githubevent['payload'] = base64.b64encode(json.dumps(githubevent['payload'], sort_keys=True).encode('ascii'))
-        # githubevent['payload'] = json.dumps(githubevent['payload'])
 
         print("load_test_event() payload ({}): {}".format(type(githubevent['payload']), githubevent['payload']))
     return githubevent
@@ -35,7 +34,6 @@ class VerifySignatureTestCase(unittest.TestCase):
         self.assertTrue(lambdawebhook.hook.verify_signature(githubevent['secret'],
                                                             githubevent['x_hub_signature'],
                                                             githubevent['payload']))
-        # self.assertTrue(False)
 
 
 class LambdaHandlerTestCase(unittest.TestCase):
