@@ -8,13 +8,13 @@ import json
 import base64
 import time
 
+import boto3
+
 # Add the lib directory to the path for Lambda to load our libs
 sys.path.append(os.path.join(os.path.dirname(__file__), 'lib'))
 from requests import Session, HTTPError  # NOQA
 from requests.packages.urllib3.util.retry import Retry  # NOQA
 from requests.adapters import HTTPAdapter  # NOQA
-
-import boto3
 
 
 class StaticRetry(Retry):

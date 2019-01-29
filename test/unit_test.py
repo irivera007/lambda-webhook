@@ -11,10 +11,7 @@ def load_test_event():
     mypath = os.path.dirname(os.path.abspath(__file__))
     with open(os.path.join(mypath, 'data/testevent.json'), 'r') as eventfile:
         githubevent = json.load(eventfile)
-        print("load_test_event() payload ({}): {}".format(type(githubevent['payload']), githubevent['payload']))
         githubevent['payload'] = base64.b64encode(json.dumps(githubevent['payload'], sort_keys=True).encode('ascii'))
-
-        print("load_test_event() payload ({}): {}".format(type(githubevent['payload']), githubevent['payload']))
     return githubevent
 
 
