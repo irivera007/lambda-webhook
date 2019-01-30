@@ -7,7 +7,7 @@ dependencies = ['boto3', 'requests', 'httpretty']
 
 setup(
     name='lambda-webhook',
-    version='0.1.0',
+    version='0.2.0',
     url='https://github.com/pristineio/lambda-webhook',
     license='BSD',
     author='John Schwinghammer',
