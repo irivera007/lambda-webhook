@@ -59,9 +59,8 @@ def relay_quay(event, requests_session):
 
 def relay_sqs(event):
     sqs_queue = event.get('sqs_queue')
-    sqs_region = event.get('sqs_region')
+    sqs_region = event.get('sqs_region', 'us-west-2')
     assert sqs_queue
-    assert sqs_region
 
     sqs_obj = dict(
         timestamp=int(time.time()),
