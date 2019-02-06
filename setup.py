@@ -6,9 +6,9 @@ from setuptools import find_packages, setup
 dependencies = ['boto3', 'requests', 'httpretty']
 
 setup(
-    name='lambda-webhook',
+    name='lambda-webhook-queue',
     version='0.2.0',
-    url='https://github.com/pristineio/lambda-webhook',
+    url='https://github.com/skruger/lambda-webhook',
     license='BSD',
     author='John Schwinghammer',
     author_email='john+githubsource@pristine.io',
